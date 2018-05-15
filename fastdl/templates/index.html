@@ -1,0 +1,31 @@
+{% extends '_base.html' %}
+{% from '_macros.html' import show_flashed_messages %}
+{% block title %}Fastdl{% endblock %}
+{% block content %}
+{{ show_flashed_messages() }}
+<h1>Most recent accesses</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <td>Client IP</td>
+      <td>Server</td>
+      <td>Map</td>
+      <td>Time</td>
+    </tr>
+  </thead>
+  <tbody>
+  {% for access in accesses %}
+    <tr>
+      <td>{{ access.ip.exploded }}</td>
+      <td>{{ access.server.ip.exploded }}:{{ access.server.port }}</td>
+      <td>{{ access.map.name }}</td>
+      <td>{{ access.access_time }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4"><em>No accesses yet!</em></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

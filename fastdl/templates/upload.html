@@ -1,0 +1,25 @@
+{% extends '_base.html' %}
+{% from '_macros.html' import script, style, show_flashed_messages %}
+{{ show_flashed_message }}
+{% block styles %}
+  {{ super() }}
+  {{ style('upload') }}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  {{ script('upload') }}
+{% endblock %}
+{% block content %}
+{{ show_flashed_messages() }}
+<form method="POST" enctype="multipart/form-data" class="mb-3">
+  {{ form.csrf_token() }}
+  <div class="form-group">
+    {{ form.map.label }}
+    {{ form.map(accept='.bsp', class_='form-control') }}
+    {% if 'map' in form.errors %}
+      <small class="form-text text-danger">{{ form.errors['map'][0] }}</small>
+    {% endif %}
+  </div>
+  <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+{% endblock %}

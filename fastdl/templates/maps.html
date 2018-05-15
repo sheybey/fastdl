@@ -1,0 +1,45 @@
+{% extends '_base.html' %}
+{% from '_macros.html' import show_flashed_messages, script %}
+{% block title %}Maps{% endblock %}
+{% block content %}
+{{ show_flashed_messages() }}
+<h1>Maps</h1>
+<table class="table">
+  <thead>
+    <tr>
+      <td>Name</td>
+      <td>Size</td>
+      <td>Times served</td>
+      <td>Fully uploaded?</td>
+      <td>
+        <input type="text" class="form-control" placeholder="Search..." id="search">
+      </td>
+    </tr>
+  </thead>
+  <tbody>
+  {% for map in maps %}
+    <tr>
+      <td>{{ map.name }}</td>
+      <td>{{ map.size|filesizeformat }}</td>
+      <td>{{ map.times_served }}</td>
+      <td>{{ 'Yes' if map.uploaded else 'No' }}</td>
+      <td>{% if map.uploaded %}
+        <form class="form-inline" method="POST" action="{{ url_for('delete_map') }}">
+          {{ form.csrf_token(id="csrf_token_" + map.id|string) }}
+          <input type="hidden" name="id" value="{{ map.id }}">
+          <input type="submit" class="btn btn-danger" value="Delete">
+        </form>
+      {% endif %}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="5"><em>No maps uploaded... <a href="{{ url_for('upload') }}">Yet</a>.</em></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  {{ script('search') }}
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends '_base.html' %}
+{% from '_macros.html' import show_flashed_messages, script %}
+{% block title %}Servers{% endblock %}
+{% block content %}
+{{ show_flashed_messages() }}
+<h1>Servers</h1>
+<form class="form-row" action="{{ url_for('create_server') }}" method="POST">
+  {{ form.csrf_token() }}
+  <div class="form-group col-lg-2">
+    <label for="ip" class="sr-only">IP address</label>
+    {{ form.ip(placeholder='IP address', class_='form-control', required='required', pattern='\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}') }}
+  </div>
+  <div class="form-group col-lg-2">
+    <label for="port" class="sr-only">Port</label>
+    {{ form.port(placeholder='Port', class_='form-control', min='1', step='1', required='required')}}
+  </div>
+  <div class="form-group col-lg-6">
+    <label for="description" class="sr-only">Description</label>
+    {{ form.description(placeholder='Description', class_='form-control', required='required')}}
+  </div>
+  <div class="form-group col-lg-2">
+    <button class="btn btn-primary w-100"><big>+</big> Add server</button>
+  </div>
+</form>
+
+<table class="table">
+  <thead>
+    <tr>
+      <td>Address</td>
+      <td>Description</td>
+      <td>Maps served</td>
+      <td>
+        <input type="text" class="form-control" placeholder="Search..." id="search">
+      </td>
+    </tr>
+  </thead>
+  <tbody>
+  {% for server in servers %}
+    <tr>
+      <td>{{ server.display }}</td>
+      <td>{{ server.description }}</td>
+      <td>{{ server.maps_served }}</td>
+      <td>
+        <form class="form-inline" method="POST" action="{{ url_for('delete_server') }}">
+          {{ delete_form.csrf_token(id="csrf_token_" + server.id|string) }}
+          <input type="hidden" name="id" value="{{ server.id }}">
+          <input type="submit" class="btn btn-danger" value="Delete">
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4"><em>There are no servers... Yet.</em></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  {{ script('search') }}
+{% endblock %}

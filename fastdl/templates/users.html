@@ -1,0 +1,76 @@
+{% extends '_base.html' %}
+{% from '_macros.html' import show_flashed_messages, script %}
+{% block title %}Users{% endblock %}
+{% block content %}
+{{ show_flashed_messages() }}
+<div class="row">
+  <div class="col-lg">
+    <h1>Users</h1>
+  </div>
+  <div class="col-lg">
+    <form class="form-inline float-lg-right" action="{{ url_for('create_user') }}" method="POST">
+      {{ form.csrf_token() }}
+      <label for="steamid" class="sr-only">Steam ID</label>
+      {{ form.steamid(placeholder='Steam ID/URL', class_='form-control mr-sm-2 mb-3 mb-lg-0') }}
+      <div class="form-check mr-sm-2 mb-3 mb-lg-0">
+        {{ form.admin(class_='form-check-input') }}
+        <label for="admin" class="form-check-label">Admin?</label>
+      </div>
+      <button class="btn btn-primary mb-3 mb-lg-0"><big>+</big> Add user</button>
+    </form>
+  </div>
+</div>
+<table class="table">
+  <thead>
+    <tr>
+      <td>Name</td>
+      <td>SteamID</td>
+      <td>Admin?</td>
+      <td>
+        <input type="text" class="form-control" placeholder="Search..." id="search">
+      </td>
+    </tr>
+  </thead>
+  <tbody>
+  {% for user in users %}
+    {% set steamid = user.steamid %}
+    <tr>
+      <td>{{ user.name }}</td>
+      <td>
+        <a href="{{ steamid.community_url }}">
+          {{ steamid.as_steam3 }}
+        </a>
+      </td>
+      <td>{{ 'Yes' if user.admin else 'No' }}</td>
+      <td>{% if user == current_user %}
+        <em class="text-muted">You</em>
+      {% else %}
+        {% if user.admin %}
+          {% set endpoint = 'demote_user' %}
+          {% set button_class = 'secondary' %}
+          {% set button_text = 'Demote' %}
+        {% else %}
+          {% set endpoint = 'promote_user' %}
+          {% set button_class = 'primary' %}
+          {% set button_text = 'Promote' %}
+        {% endif %}
+        <form class="form-inline" method="POST">
+          {{ admin_form.csrf_token(id="csrf_token_" + user.steamid64|string) }}
+          <input type="hidden" name="id" value="{{ user.steamid64 }}">
+          <input type="submit" class="btn btn-{{ button_class }} mr-2" value="{{ button_text }}" formaction="{{ url_for(endpoint) }}">
+          <input type="submit" class="btn btn-danger" value="Delete" formaction="{{ url_for('delete_user') }}">
+        </form>
+      {% endif %}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4"><em>oh dear, it's broken :(</em></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  {{ script('search') }}
+{% endblock %}
