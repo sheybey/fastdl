@@ -151,7 +151,7 @@ def download_map(name):
 
             access = Access(ip=request.remote_addr, map=map, server=server)
             db.session.add(access)
-            db.session.commit(access)
+            db.session.commit()
 
         except (KeyError, ValueError):
             abort(404)
