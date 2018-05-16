@@ -11,6 +11,7 @@ app = Flask('fastdl', instance_relative_config=True)
 app.config.from_object('fastdl.config')
 app.config['UPLOAD_DIR'] = path.join(app.instance_path, 'uploads')
 app.config.from_pyfile('fastdl.cfg')
+app.config['UPLOAD_DIR'] = path.abspath(app.config['UPLOAD_DIR'])
 
 for key in ['SECRET_KEY', 'SQLALCHEMY_DATABASE_URI', 'STEAM_API_KEY']:
     if key not in app.config:
