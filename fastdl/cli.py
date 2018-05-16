@@ -79,7 +79,7 @@ def discover():
             echo('added ' + name)
         else:
             echo('warning: ignoring invalid BSP ' + name)
-        
+
     db.session.commit()
 
 

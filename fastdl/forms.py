@@ -15,6 +15,7 @@ from werkzeug.utils import secure_filename
 from . import app, steam_api
 from .models import Map, User
 
+
 class MagicNumber:
     def __init__(self, magic_numbers, message='Invalid file.'):
         self.magic_numbers = magic_numbers

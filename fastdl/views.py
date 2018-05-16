@@ -28,9 +28,8 @@ def index():
     if current_user.is_authenticated:
         return render_template(
             'index.html',
-            accesses=Access.query
-                .order_by(db.desc(Access.access_time))
-                .limit(10).all()
+            accesses=Access.query.order_by(
+                db.desc(Access.access_time)).limit(10).all()
         )
     else:
         return redirect(url_for('login'))
@@ -99,6 +98,7 @@ def create_server():
         flash(next(iter(next(iter(form.errors.values())))), 'danger')
 
     return redirect(url_for('servers'))
+
 
 @login_required
 @app.route('/server/delete', methods=['POST'])

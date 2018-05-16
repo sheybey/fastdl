@@ -128,7 +128,7 @@ class Map(db.Model):
     def filename(self):
         return path.join(app.config['UPLOAD_DIR'], self.name)
 
-    @property    
+    @property
     def url(self):
         return url_for('download_map', name=self.name)
 
