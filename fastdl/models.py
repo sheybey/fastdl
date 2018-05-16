@@ -94,7 +94,7 @@ class Server(IPMixin, db.Model):
 
     @classmethod
     def get_by_address(cls, address, port):
-        if not isinstance(address, IPv4Address, port):
+        if not isinstance(address, IPv4Address):
             address = IPv4Address(address)
         return cls.query.filter_by(_ip=address.packed, port=port).first()
 
