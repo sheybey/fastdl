@@ -1,5 +1,5 @@
+import re
 from functools import wraps
-from re import match
 from steam.steamid import SteamID
 from flask import (
     render_template, redirect, url_for, flash, request, abort, send_file,
