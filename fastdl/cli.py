@@ -1,7 +1,9 @@
 from os import path, mkdir, listdir
-from click import echo
+from click import echo, argument, option
+from steam.enums.common import EType
 from . import app, db
 from .models import Map, Server, Access, User
+from .util import string_to_steamid
 
 
 @app.cli.group('db')
@@ -22,30 +24,19 @@ def create_database():
     db.create_all()
 
 
-@database.command()
-def seed():
-    """Insert initial data into the database"""
-    db.session.add(User(
-        steamid64=76561198013023668,
-        admin=True,
-        name="sheybey | TF2.GG"
-    ))
-    db.session.commit()
-
-
 @app.cli.group()
-def uploads():
-    """Configure the upload directory"""
+def maps():
+    """Map-related utilites"""
     pass
 
 
-@uploads.command('path')
+@maps.command('path')
 def get_upload_path():
     """Get the effective configured upload path"""
     echo(app.config['UPLOAD_DIR'])
 
 
-@uploads.command('create')
+@maps.command('create')
 def create_uploads():
     """Create the upload directory"""
     try:
@@ -55,7 +46,7 @@ def create_uploads():
         echo('Could not create directory: ' + str(e))
 
 
-@uploads.command()
+@maps.command()
 def discover():
     """Add pre-existing maps to the database"""
     existing = list(map(lambda m: m.name, Map.query.all()))
@@ -83,7 +74,7 @@ def discover():
     db.session.commit()
 
 
-@uploads.command()
+@maps.command()
 def prune():
     """Remove maps that do not exist on the filesystem"""
     for map in Map.query.all():
@@ -92,3 +83,52 @@ def prune():
             echo('pruned ' + map.name)
 
     db.session.commit()
+
+
+@app.cli.group()
+def user():
+    """Manage users"""
+    pass
+
+
+@user.command('create')
+@argument('steamid')
+@option('--admin/--not-admin', default=False)
+def create_user(steamid, admin):
+    """Create a user"""
+    steamid = string_to_steamid(steamid)
+    if not steamid.is_valid() or not steamid.type == EType.Individual:
+        echo('Invalid steam ID')
+        return 1
+
+    user = User(steamid64=steamid.as_64, admin=admin)
+    user.refresh_name()
+    if user.name is not None:
+        db.session.add(user)
+        db.session.commit()
+        echo('added ' + user.name)
+    else:
+        echo('No such steam user')
+        return 1
+
+
+@user.command('delete')
+@argument('steamid64', type=int)
+def delete_user(steamid64):
+    """Delete a user"""
+    user = User.query.get(steamid64)
+    if user is None:
+        echo('No such user')
+        return 1
+    db.session.delete(user)
+    db.session.commit()
+    echo('deleted ' + user.name)
+
+
+@user.command('list')
+def list_users():
+    """List all users"""
+    echo('Steam ID'.ljust(17, ' ') + '  Name')
+    echo('-' * 79)
+    for user in User.query.all():
+        echo(str(user.steamid64) + '  ' + user.name)

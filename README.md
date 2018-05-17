@@ -16,13 +16,31 @@ of your bandwidth just by setting `sv_downloadurl`.
 ## Setup
 
 fastdl is written in Python 3 using [Flask]. To use it, install the
-requirements:
+requirements, set configuration options, set up the database, and add an
+initial user:
 
-    pip install -r requirements.txt
+```bash
+# To use a virtual environment (recommended):
+python3 -m venv .venv
+source .venv/bin/activate
 
-Then, copy `instance/fastdl.cfg.sample` to `instance/fastdl.cfg` and edit it
-as necessary. You can then deploy it as a wsgi app using your method of choice
-(see http://flask.pocoo.org/docs/1.0/deploying/)
+# Install requirements
+pip install -r requirements.txt
+
+# Configure
+cp instance/fastdl.cfg.sample instance/fastdl.cfg
+vi instance/fastdl.cfg
+
+# Set up database
+export FLASK_APP=fastdl
+flask db create
+
+# Add an initial user
+flask user create <your customurl> --admin
+```
+
+You can then deploy it as a wsgi app using your method of choice
+(see http://flask.pocoo.org/docs/1.0/deploying/).
 
 [fastdl]: https://developer.valvesoftware.com/wiki/Sv_downloadurl
 [Flask]: https://flask.pocoo.org
