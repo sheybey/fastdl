@@ -1,0 +1,13 @@
+# This string is used for several cryptographic purposes. A good start is
+# os.urandom(32).hex().
+SECRET_KEY = '0123456789abcdef'
+
+# Used to access the Steam web API. https://steamcommunity.com/dev/apikey
+STEAM_API_KEY = 'DEADBEEFDEADBEEFDEADBEEFDEADBEEF'
+
+# Database location and credentials. See
+# http://docs.sqlalchemy.org/en/latest/core/engines.html#database-urls
+SQLALCHEMY_DATABASE_URI = 'sqlite:///fastdl.sqlite'
+
+# Place where uploads are stored. Defaults to instance/uploads.
+# UPLOAD_DIR = '/var/lib/fastdl/uploads'

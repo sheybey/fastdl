@@ -55,7 +55,7 @@ coverage.xml
 *.pot
 
 # Flask stuff:
-instance/
+#instance/
 .webassets-cache
 
 # Scrapy stuff:
