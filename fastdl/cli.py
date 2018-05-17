@@ -52,18 +52,20 @@ def discover():
     existing = list(map(lambda m: m.name, Map.query.all()))
 
     for name in listdir(app.config['UPLOAD_DIR']):
+        full_path = path.join(app.config['UPLOAD_DIR'], name)
         if (
             name in existing or
-            not path.isfile(name) or
+            not path.isfile(full_path) or
             not name.endswith('.bsp')
         ):
             continue
+
 
         if name in app.config['BUILTIN']:
             echo('warning: ignoring builtin map ' + name)
             continue
 
-        with open(name, 'rb') as file:
+        with open(full_path, 'rb') as file:
             magic_number = file.read(4)
         if magic_number == b'VBSP':
             db.session.add(Map(name=name, uploaded=True))
