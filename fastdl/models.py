@@ -4,7 +4,7 @@ from os import path, stat, unlink
 from flask_login import AnonymousUserMixin
 from sqlalchemy import types
 from steam.steamid import SteamID
-from . import app, db, login_manager
+from . import app, db, login_manager, steam_api
 
 
 class UTCDateTime(types.TypeDecorator):
@@ -55,6 +55,17 @@ class User(db.Model):
     @property
     def steamid(self):
         return SteamID(self.steamid64)
+
+    def refresh_name(self):
+        self.name = steam_api.ISteamUser.GetPlayerSummaries(
+            steamids=str(self.steamid64)
+        ).get(
+            'response',
+            {}
+        ).get(
+            'players',
+            [{}]
+        )[0].get('personaname')
 
 
 @login_manager.user_loader

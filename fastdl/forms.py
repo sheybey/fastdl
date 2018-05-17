@@ -14,6 +14,7 @@ from wtforms.widgets import TextInput, HiddenInput
 from werkzeug.utils import secure_filename
 from . import app, steam_api
 from .models import Map, User
+from .util import string_to_steamid
 
 
 class MagicNumber:
@@ -54,16 +55,7 @@ class SteamIDField(Field):
 
     def process_formdata(self, valuelist):
         if valuelist:
-            try:
-                self.data = SteamID(valuelist[0])
-                if not self.data.is_valid():
-                    self.data = SteamID(
-                        steam_api.ISteamUser.ResolveVanityURL(
-                            vanityurl=valuelist[0]
-                        ).get('response', {}).get('steamid')
-                    )
-            except ValueError:
-                self.data = SteamID()
+            self.data = string_to_steamid(valuelist[0])
 
         else:
             self.data = SteamID()

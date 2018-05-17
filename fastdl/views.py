@@ -304,19 +304,16 @@ def create_user():
         if user:
             flash(user.name + ' already added.', 'danger')
         else:
-            try:
-                user = User(
-                    name=steam_api.ISteamUser.GetPlayerSummaries(
-                        steamids=str(id64)
-                    )['response']['players'][0]['personaname'],
-                    steamid64=id64,
-                    admin=form.admin.data
-                )
+            user = User(
+                steamid64=id64,
+                admin=form.admin.data
+            )
+            user.refresh_name()
+            if user.name is not None:
                 db.session.add(user)
                 db.session.commit()
                 flash(user.name + ' added.', 'success')
-
-            except (KeyError, IndexError):
+            else:
                 flash('No such steam user.', 'danger')
 
     else:
