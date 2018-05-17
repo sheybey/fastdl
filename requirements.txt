@@ -1,7 +1,8 @@
-flask
-flask_login
-flask_openid_stateless
-flask_sqlalchemy
-flask_wtf
-steam
+Flask~=1.0.2
+Flask-Login~=0.4.1
+Flask-OpenID-Stateless~=1.2.6
+Flask-SQLAlchemy~=2.3.2
+Flask-WTF~=0.14.2
+steam~=0.9.0
+
 -e .
