@@ -1,10 +1,6 @@
 {% extends '_base.html' %}
 {% from '_macros.html' import script, style, show_flashed_messages %}
 {{ show_flashed_message }}
-{% block styles %}
-  {{ super() }}
-  {{ style('upload') }}
-{% endblock %}
 {% block scripts %}
   {{ super() }}
   {{ script('upload') }}
