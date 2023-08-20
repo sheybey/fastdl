@@ -1,17 +1,19 @@
-$(function () {
+document.addEventListener('DOMContentLoaded', () => {
   'use strict';
-  $("#search").on('input', function (e) {
-    var pattern = $(this).val().trim().toLowerCase();
-    $('tbody tr').each(function (ignore, elem) {
-      var row = $(elem);
+  document.querySelector('#search').addEventListener('input', (event) => {
+    const pattern = event.target.value.trim().toLowerCase();
+    document.querySelectorAll('tbody tr').forEach((row) => {
+      const display = row.querySelector('.server-display');
+      const description = row.querySelector('.server-description');
       if (
         pattern === '' ||
-        row.find('td:first-child').text().toLowerCase().indexOf(pattern) !== -1
+        display.innerText.toLowerCase().indexOf(pattern) !== -1 ||
+        description.innerText.toLowerCase().indexOf(pattern) !== -1
       ) {
-        row.show();
+        row.style.visibility = '';
       } else {
-        row.hide();
+        row.style.visibility = 'collapse';
       }
-    })
+    });
   });
 });

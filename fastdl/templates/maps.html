@@ -16,7 +16,7 @@
       </td>
     </tr>
   </thead>
-  <tbody>
+  <tbody class="align-middle">
   {% for map in maps %}
     <tr>
       <td>{{ map.name }}</td>
@@ -24,7 +24,7 @@
       <td>{{ map.times_served }}</td>
       <td>{{ 'Yes' if map.uploaded else 'No' }}</td>
       <td>{% if map.uploaded %}
-        <form class="form-inline" method="POST" action="{{ url_for('delete_map') }}">
+        <form class="d-inline" method="POST" action="{{ url_for('delete_map') }}">
           {{ form.csrf_token(id="csrf_token_" + map.id|string) }}
           <input type="hidden" name="id" value="{{ map.id }}">
           <input type="submit" class="btn btn-danger" value="Delete">

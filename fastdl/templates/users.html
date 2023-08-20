@@ -8,15 +8,15 @@
     <h1>Users</h1>
   </div>
   <div class="col-lg">
-    <form class="form-inline float-lg-right" action="{{ url_for('create_user') }}" method="POST">
+    <form class="d-flex gap-2 float-lg-right align-items-center" action="{{ url_for('create_user') }}" method="POST">
       {{ form.csrf_token() }}
-      <label for="steamid" class="sr-only">Steam ID</label>
-      {{ form.steamid(placeholder='Steam ID/URL', class_='form-control mr-sm-2 mb-3 mb-lg-0') }}
-      <div class="form-check mr-sm-2 mb-3 mb-lg-0">
+      <label for="steamid" class="visually-hidden">Steam ID</label>
+      {{ form.steamid(placeholder='Steam ID/URL', class_='form-control w-auto flex-grow-1') }}
+      <div class="form-check">
         {{ form.admin(class_='form-check-input') }}
         <label for="admin" class="form-check-label">Admin?</label>
       </div>
-      <button class="btn btn-primary mb-3 mb-lg-0"><big>+</big> Add user</button>
+      <button class="btn btn-primary"><big>+</big> Add user</button>
     </form>
   </div>
 </div>
@@ -31,7 +31,7 @@
       </td>
     </tr>
   </thead>
-  <tbody>
+  <tbody class="align-middle">
   {% for user in users %}
     {% set steamid = user.steamid %}
     <tr>
@@ -54,10 +54,10 @@
           {% set button_class = 'primary' %}
           {% set button_text = 'Promote' %}
         {% endif %}
-        <form class="form-inline" method="POST">
+        <form class="d-flex gap-2" method="POST">
           {{ admin_form.csrf_token(id="csrf_token_" + user.steamid64|string) }}
           <input type="hidden" name="id" value="{{ user.steamid64 }}">
-          <input type="submit" class="btn btn-{{ button_class }} mr-2" value="{{ button_text }}" formaction="{{ url_for(endpoint) }}">
+          <input type="submit" class="btn btn-{{ button_class }}" value="{{ button_text }}" formaction="{{ url_for(endpoint) }}">
           <input type="submit" class="btn btn-danger" value="Delete" formaction="{{ url_for('delete_user') }}">
         </form>
       {% endif %}</td>
