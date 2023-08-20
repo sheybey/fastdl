@@ -51,7 +51,7 @@ def create_uploads():
 @maps.command()
 def discover():
     """Add pre-existing maps to the database"""
-    existing = list(map(lambda m: m.name, Map.query.all()))
+    existing = list(map(lambda m: m.name, db.session.scalars(db.select(Map))))
 
     for name in listdir(app.config['UPLOAD_DIR']):
         full_path = path.join(app.config['UPLOAD_DIR'], name)
@@ -80,7 +80,7 @@ def discover():
 @maps.command()
 def prune():
     """Remove maps that do not exist on the filesystem"""
-    for map in Map.query.all():
+    for map in db.session.scalars(db.select(Map)):
         if not path.isfile(map.filename):
             db.session.delete(map)
             echo('pruned ' + map.name)
@@ -119,7 +119,7 @@ def create_user(steamid, admin):
 @argument('steamid64', type=int)
 def delete_user(steamid64):
     """Delete a user"""
-    user = User.query.get(steamid64)
+    user = db.session.get(User, steamid64)
     if user is None:
         echo('No such user')
         return 1
@@ -133,5 +133,5 @@ def list_users():
     """List all users"""
     echo('Steam ID'.ljust(17, ' ') + '  Name')
     echo('-' * 79)
-    for user in User.query.all():
+    for user in db.session.scalars(db.select(User)):
         echo(str(user.steamid64) + '  ' + user.name)

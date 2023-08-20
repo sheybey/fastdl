@@ -11,7 +11,7 @@ from wtforms.fields import (
 )
 from wtforms.widgets import TextInput, HiddenInput
 
-from . import app
+from . import app, db
 from .models import Map, User
 from .util import string_to_steamid
 
@@ -79,7 +79,7 @@ class UserIDField(Field):
                 self.data = obj
             else:
                 try:
-                    self.data = User.query.get(int(valuelist[0]))
+                    self.data = db.session.get(User, int(valuelist[0]))
                 except ValueError:
                     self.data = None
         else:
@@ -97,7 +97,7 @@ def unique_map_name(form, field):
     ):
         raise ValidationError('This map is built-in to the game.')
 
-    map = Map.query.filter_by(name=name).first()
+    map = db.session.scalar(db.select(Map).where(Map.name == name))
     if map is not None:
         raise ValidationError(
             map.name + ' already exists. To replace it, delete it first.')
@@ -170,7 +170,7 @@ class IDForm(FlaskForm):
 
     def validate_id(self, field):
         try:
-            instance = self.model.query.get(int(field.data))
+            instance = db.session.get(self.model, int(field.data))
             if instance is None:
                 raise ValueError
         except ValueError:

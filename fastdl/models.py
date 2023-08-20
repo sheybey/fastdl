@@ -1,23 +1,26 @@
 from datetime import datetime, timezone
 from ipaddress import IPv4Address
 from os import path, stat, unlink
+from typing import Optional
 
 from flask import url_for
 from flask_login import AnonymousUserMixin
 from steam.steamid import SteamID
 from sqlalchemy.sql import sqltypes
+from sqlalchemy.sql.functions import count
 
 from . import app, db, login_manager, steam_api
 
 
 class UTCDateTime(sqltypes.TypeDecorator):
     impl = sqltypes.DateTime
+    cache_ok = False
 
-    def process_bind_param(self, value, engine):
+    def process_bind_param(self, value, _engine):
         if value is not None:
             return value.astimezone(timezone.utc)
 
-    def process_result_value(self, value, engine):
+    def process_result_value(self, value, _engine):
         if value is not None:
             return self.to_utc(value)
 
@@ -73,7 +76,7 @@ class User(db.Model):
 
 @login_manager.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return db.session.get(User, int(id))
 
 
 class IPMixin:
@@ -103,17 +106,27 @@ class Server(IPMixin, db.Model):
         )
 
     @property
-    def maps_served(self):
-        return Access.query.filter_by(server=self).count()
+    def maps_served(self) -> int:
+        return db.session.scalar(
+            db.select(count(Access.id)).where(Access.server == self)
+        ) or 0
 
     @classmethod
-    def get_by_address(cls, address, port):
+    def get_by_address(
+        cls,
+        address: str | IPv4Address | None,
+        port: int | None
+    ) -> Optional['Server']:
+        if address is None or port is None:
+            return None
         if not isinstance(address, IPv4Address):
             address = IPv4Address(address)
-        return cls.query.filter_by(_ip=address.packed, port=port).first()
+        return db.session.scalar(
+            db.select(cls).where(cls._ip == address.packed and cls.port == port)
+        )
 
     @property
-    def bandwidth(self):
+    def bandwidth(self) -> int:
         sizes = {}
         total = 0
         for access in self.accesses:
@@ -158,8 +171,10 @@ class Map(db.Model):
         return self.size * self.times_served
 
     @property
-    def times_served(self):
-        return Access.query.filter_by(map=self).count()
+    def times_served(self) -> int:
+        return db.session.scalar(
+            db.select(count(Access.id)).where(Access.map == self)
+        ) or 0
 
     def __repr__(self):
         return '<{} {}>'.format(self.__class__.__name__, self.name)

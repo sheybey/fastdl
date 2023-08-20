@@ -32,8 +32,9 @@ def index():
     if current_user.is_authenticated:
         return render_template(
             'index.html',
-            accesses=Access.query.order_by(
-                db.desc(Access.access_time)).limit(10).all()
+            accesses=db.session.scalars(
+                db.select(Access).order_by(Access.access_time.desc()).limit(10)
+            )
         )
     else:
         return redirect(url_for('login'))
@@ -55,7 +56,7 @@ def login():
 @openid.after_login
 def after_login(response):
     id = response.identity_url.split('/')[-1]
-    user = User.query.get(id)
+    user = db.session.get(User, id)
     if user:
         login_user(user)
         return redirect(url_for('index'))
@@ -74,7 +75,7 @@ def logout():
 def servers():
     return render_template(
         'servers.html',
-        servers=Server.query.all(),
+        servers=db.session.scalars(db.select(Server)),
         form=NewServerForm(),
         delete_form=IDForm(model=Server)
     )
@@ -124,14 +125,14 @@ def delete_server():
 def maps():
     return render_template(
         'maps.html',
-        maps=Map.query.all(),
+        maps=db.session.scalars(db.select(Map)),
         form=IDForm(model=Map)
     )
 
 
 @app.route('/maps/<name>')
 def download_map(name):
-    map = Map.query.filter_by(name=name).first_or_404()
+    map = db.first_or_404(db.select(Map).where(Map.name == name))
     if not map.uploaded:
         abort(404)
 
@@ -208,7 +209,7 @@ def upload():
     is_post = request.method == 'POST'
     should_return_json = (
         is_post and
-        request.headers.get('Accept', '') == 'application/json'
+        request.headers.get('Accept') == 'application/json'
     )
     form = UploadForm()
     if is_post:
@@ -227,12 +228,15 @@ def upload():
                     'success': True,
                     'map_name': map.name
                 })
+            else:
+                flash('Uploaded ' + map.name, 'success')
 
-        elif should_return_json:
-            return jsonify({
-                'success': False,
-                'error': form.errors[next(iter(form.errors.keys()))][0]
-            })
+        else:
+            error = form.errors[next(iter(form.errors.keys()))][0]
+            if should_return_json:
+                return jsonify({'success': False, 'error': error})
+            else:
+                flash(error, 'danger')
 
     return render_template('upload.html', form=form)
 
@@ -242,7 +246,7 @@ def upload():
 def users():
     return render_template(
         'users.html',
-        users=User.query.all(),
+        users=db.session.scalars(db.select(User)),
         form=NewUserForm(),
         admin_form=IDForm(model=User, pk='steamid64')
     )
@@ -308,7 +312,7 @@ def create_user():
     form = NewUserForm()
     if form.validate():
         id64 = form.steamid.data.as_64
-        user = User.query.filter_by(steamid64=id64).first()
+        user = db.session.scalar(db.select(User).where(User.steamid64 == id64))
         if user:
             flash(user.name + ' already added.', 'danger')
         else:
