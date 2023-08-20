@@ -1,18 +1,17 @@
 from ipaddress import IPv4Address
-from steam.steamid import SteamID
-from steam.enums.common import EType
-from flask_login import current_user
+
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms.validators import (
-    ValidationError, InputRequired, DataRequired, IPAddress
-)
+from steam.enums.common import EType
+from steam.steamid import SteamID
+from werkzeug.utils import secure_filename
+from wtforms.validators import InputRequired, ValidationError
 from wtforms.fields import (
     Field, BooleanField, HiddenField, IntegerField, StringField
 )
 from wtforms.widgets import TextInput, HiddenInput
-from werkzeug.utils import secure_filename
-from . import app, steam_api
+
+from . import app
 from .models import Map, User
 from .util import string_to_steamid
 

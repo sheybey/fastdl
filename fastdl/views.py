@@ -1,16 +1,20 @@
-import re
 from functools import wraps
 from ipaddress import IPv4Address
-from steam.steamid import SteamID
+import re
+
 from flask import (
     render_template, redirect, url_for, flash, request, abort, send_file,
     jsonify
 )
-from flask_login import current_user, login_user, logout_user, login_required
-from markupsafe import Markup
-from . import app, openid, db, steam_api
-from .models import User, Server, Map, Access
-from .forms import UploadForm, NewUserForm, NewServerForm, IDForm
+from flask_login import current_user  # type: ignore
+from flask_login import login_required, login_user, logout_user
+
+from . import app, db, openid
+from .forms import IDForm, NewServerForm, NewUserForm, UploadForm
+from .models import AnonymousUser, User, Server, Map, Access
+
+
+current_user: User | AnonymousUser
 
 
 def admin_required(view):
@@ -85,7 +89,7 @@ def create_server():
         if server:
             flash(server.display + ' already added.', 'danger')
         else:
-            server = Server(
+            server = Server(  # type: ignore
                 ip=form.ip.data,
                 port=form.port.data,
                 description=form.description.data
@@ -149,7 +153,11 @@ def download_map(name):
             if server is None:
                 abort(404)
 
-            access = Access(ip=request.remote_addr, map=map, server=server)
+            access = Access(  # type: ignore
+                ip=request.remote_addr,
+                map=map,
+                server=server
+            )
             db.session.add(access)
             db.session.commit()
 

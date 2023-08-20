@@ -1,10 +1,11 @@
 from importlib import import_module
-from os import path, listdir
-from steam.webapi import WebAPI
+from os import path
+
 from flask import Flask
 from flask_login import LoginManager
-from flask_sqlalchemy import SQLAlchemy
 from flask_openid import OpenID
+from flask_sqlalchemy import SQLAlchemy
+from steam.webapi import WebAPI
 
 
 app = Flask('fastdl', instance_relative_config=True)

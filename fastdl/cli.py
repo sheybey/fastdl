@@ -1,8 +1,10 @@
-from os import path, mkdir, listdir
-from click import echo, argument, option
+from os import listdir, mkdir, path
+
+from click import argument, echo, option
 from steam.enums.common import EType
+
 from . import app, db
-from .models import Map, Server, Access, User
+from .models import Map, User
 from .util import string_to_steamid
 
 
@@ -59,7 +61,6 @@ def discover():
             not name.endswith('.bsp')
         ):
             continue
-
 
         if name in app.config['BUILTIN']:
             echo('warning: ignoring builtin map ' + name)

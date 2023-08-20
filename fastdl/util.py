@@ -7,7 +7,7 @@ def string_to_steamid(string, resolve_customurl=True):
         steamid = SteamID(string)
         if not steamid.is_valid() and resolve_customurl:
             steamid = SteamID(
-                steam_api.ISteamUser.ResolveVanityURL(
+                steam_api.ISteamUser.ResolveVanityURL(  # pyright: ignore
                     vanityurl=string
                 ).get('response', {}).get('steamid')
             )

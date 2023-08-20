@@ -1,15 +1,17 @@
 from datetime import datetime, timezone
 from ipaddress import IPv4Address
 from os import path, stat, unlink
-from flask_login import AnonymousUserMixin
-from sqlalchemy import types
-from steam.steamid import SteamID
+
 from flask import url_for
+from flask_login import AnonymousUserMixin
+from steam.steamid import SteamID
+from sqlalchemy.sql import sqltypes
+
 from . import app, db, login_manager, steam_api
 
 
-class UTCDateTime(types.TypeDecorator):
-    impl = types.DateTime
+class UTCDateTime(sqltypes.TypeDecorator):
+    impl = sqltypes.DateTime
 
     def process_bind_param(self, value, engine):
         if value is not None:
@@ -42,9 +44,9 @@ login_manager.anonymous_user = AnonymousUser
 
 
 class User(db.Model):
-    steamid64 = db.Column(db.BigInteger, primary_key=True)
-    admin = db.Column(db.Boolean, nullable=False, default=False)
-    name = db.Column(db.String(128), nullable=False)
+    steamid64: int = db.Column(db.BigInteger, primary_key=True)
+    admin: bool = db.Column(db.Boolean, nullable=False, default=False)
+    name: str = db.Column(db.String(128), nullable=False)
 
     is_authenticated = True
     is_active = True
@@ -58,7 +60,7 @@ class User(db.Model):
         return SteamID(self.steamid64)
 
     def refresh_name(self):
-        self.name = steam_api.ISteamUser.GetPlayerSummaries(
+        self.name = steam_api.ISteamUser.GetPlayerSummaries(  # type: ignore
             steamids=str(self.steamid64)
         ).get(
             'response',
@@ -87,9 +89,9 @@ class IPMixin:
 
 
 class Server(IPMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    _ip = db.Column('ip', db.BINARY(4), nullable=False)
-    port = db.Column(db.Integer)
+    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    _ip: bytes = db.Column('ip', db.BINARY(4), nullable=False)
+    port: int = db.Column(db.Integer)
 
     description = db.Column(db.Text, nullable=False)
 
