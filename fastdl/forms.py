@@ -8,7 +8,7 @@ from wtforms.validators import (
     ValidationError, InputRequired, DataRequired, IPAddress
 )
 from wtforms.fields import (
-    Field, BooleanField, HiddenField, TextField, IntegerField
+    Field, BooleanField, HiddenField, IntegerField, StringField
 )
 from wtforms.widgets import TextInput, HiddenInput
 from werkzeug.utils import secure_filename
@@ -136,9 +136,9 @@ class NewUserForm(FlaskForm):
 
 
 class NewServerForm(FlaskForm):
-    ip = TextField('IP Address')
+    ip = StringField('IP Address')
     port = IntegerField('Port')
-    description = TextField(
+    description = StringField(
         'Description',
         validators=[InputRequired('Missing description')]
     )

@@ -4,6 +4,7 @@ from os import path, stat, unlink
 from flask_login import AnonymousUserMixin
 from sqlalchemy import types
 from steam.steamid import SteamID
+from flask import url_for
 from . import app, db, login_manager, steam_api
 
 

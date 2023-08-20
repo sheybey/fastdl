@@ -7,7 +7,7 @@ from flask import (
     jsonify
 )
 from flask_login import current_user, login_user, logout_user, login_required
-from jinja2 import Markup
+from markupsafe import Markup
 from . import app, openid, db, steam_api
 from .models import User, Server, Map, Access
 from .forms import UploadForm, NewUserForm, NewServerForm, IDForm
@@ -160,7 +160,7 @@ def download_map(name):
         map.filename,
         mimetype='application/octet-stream',
         as_attachment=True,
-        attachment_filename=map.name,
+        download_name=map.filename,
         conditional=True
     )
 

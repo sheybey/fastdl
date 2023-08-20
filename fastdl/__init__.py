@@ -19,7 +19,7 @@ for key in ['SECRET_KEY', 'SQLALCHEMY_DATABASE_URI', 'STEAM_API_KEY']:
 
 login_manager = LoginManager(app)
 db = SQLAlchemy(app)
-openid = OpenID(app, stateless=True)
+openid = OpenID(app, store_factory=lambda: None)
 steam_api = WebAPI(app.config['STEAM_API_KEY'])
 
 
