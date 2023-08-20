@@ -150,10 +150,15 @@ class Map(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
     uploaded = db.Column(db.Boolean, nullable=False)
+    compressed = db.Column(db.Boolean, nullable=False, default=False)
 
     @property
     def filename(self):
         return path.join(app.config['UPLOAD_DIR'], self.name)
+
+    @property
+    def filename_compressed(self):
+        return self.filename + '.bz2'
 
     @property
     def url(self):
@@ -163,6 +168,15 @@ class Map(db.Model):
     def size(self):
         try:
             return stat(self.filename).st_size
+        except IOError:
+            return 0
+
+    @property
+    def size_compressed(self):
+        if not self.compressed:
+            return 0
+        try:
+            return stat(self.filename_compressed).st_size
         except IOError:
             return 0
 
@@ -181,6 +195,8 @@ class Map(db.Model):
 
     def delete(self):
         unlink(self.filename)
+        if self.compressed:
+            unlink(self.filename_compressed)
 
 
 class Access(IPMixin, db.Model):
