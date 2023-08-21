@@ -25,6 +25,7 @@ def admin_required(view):
             flash('You are not authorized to view this page.', 'danger')
             return redirect(url_for('index'))
         return view(*args, **kwargs)
+    return check_admin
 
 
 @app.route('/')
