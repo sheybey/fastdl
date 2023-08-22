@@ -94,9 +94,18 @@ class IPMixin:
 class Server(IPMixin, db.Model):
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
     _ip: bytes = db.Column('ip', db.BINARY(4), nullable=False)
-    port: int = db.Column(db.Integer)
+    port: int = db.Column(db.Integer, nullable=False)
 
     description = db.Column(db.Text, nullable=False)
+
+    ftp_enabled: bool = db.Column(db.Boolean, nullable=False, default=False)
+    ftp_host: str = db.Column(db.String(128), nullable=False, default='')
+    ftp_port: int = db.Column(db.Integer, nullable=False, default=0)
+    ftp_tls: bool = db.Column(db.Boolean, nullable=False, default=True)
+    ftp_tls_verify: bool = db.Column(db.Boolean, nullable=False, default=True)
+    ftp_user: str = db.Column(db.String(128), nullable=False, default='')
+    ftp_pass: str = db.Column(db.String(128), nullable=False, default='')
+    ftp_dir: str = db.Column(db.String(128), nullable=False, default='')
 
     def __repr__(self):
         return '<{} {}:{}>'.format(
@@ -122,7 +131,9 @@ class Server(IPMixin, db.Model):
         if not isinstance(address, IPv4Address):
             address = IPv4Address(address)
         return db.session.scalar(
-            db.select(cls).where(cls._ip == address.packed and cls.port == port)
+            db.select(cls).where(
+                cls._ip == address.packed and cls.port == port
+            )
         )
 
     @property

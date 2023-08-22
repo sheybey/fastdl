@@ -12,7 +12,7 @@
       {{ form.csrf_token() }}
       <label for="steamid" class="visually-hidden">Steam ID</label>
       {{ form.steamid(placeholder='Steam ID/URL', class_='form-control w-auto flex-grow-1') }}
-      <div class="form-check">
+      <div class="form-check" title="Admin users can add other users">
         {{ form.admin(class_='form-check-input') }}
         <label for="admin" class="form-check-label">Admin?</label>
       </div>

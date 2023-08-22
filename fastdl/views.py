@@ -9,10 +9,14 @@ from flask import (
 from flask_login import current_user  # type: ignore
 from flask_login import login_required, login_user, logout_user
 
+
 from . import app, db, openid
 from .compress import schedule_compress
-from .forms import IDForm, NewServerForm, NewUserForm, UploadForm
+from .forms import (
+    EditServerForm, IDForm, NewServerForm, NewUserForm, UploadForm
+)
 from .models import AnonymousUser, User, Server, Map, Access
+from .upload_ftp import FTPAction, schedule_ftp_action
 
 
 current_user: User | AnonymousUser
@@ -107,6 +111,56 @@ def create_server():
     return redirect(url_for('servers'))
 
 
+def update_server(server: Server, form: EditServerForm):
+    if form.validate():
+        server.ip = form.ip.data
+        server.description = form.description.data
+
+        server.ftp_enabled = form.ftp_enabled.data
+        if form.ftp_enabled.data:
+            server.ftp_host = form.ftp_host.data
+            server.ftp_port = form.ftp_port.data or 21
+            server.ftp_tls = form.ftp_tls.data
+            server.ftp_tls_verify = form.ftp_tls_verify.data
+            server.ftp_dir = form.ftp_dir.data
+            server.ftp_user = form.ftp_user.data
+            if form.ftp_pass.data:
+                server.ftp_pass = form.ftp_pass.data
+            elif not server.ftp_pass:
+                flash('Missing FTP password', 'danger')
+                return False
+        else:
+            server.ftp_host = ''
+            server.ftp_port = 0
+            server.ftp_tls = True
+            server.ftp_tls_verify = True
+            server.ftp_dir = '/'
+            server.ftp_user = ''
+            server.ftp_pass = ''
+
+        return True
+
+    else:
+        for error_list in form.errors.values():
+            for error in error_list:
+                flash(error, 'danger')
+        return False
+
+
+@login_required
+@app.route('/server/edit/<int:id>', methods=['GET', 'POST'])
+def edit_server(id):
+    server = db.get_or_404(Server, id)
+    form = EditServerForm(obj=server)
+    if request.method == 'POST':
+        if update_server(server, form):
+            db.session.add(server)
+            db.session.commit()
+            flash('Server details updated.', 'success')
+            return redirect(url_for('servers'))
+    return render_template('edit_server.html', form=form, server=server)
+
+
 @login_required
 @app.route('/server/delete', methods=['POST'])
 def delete_server():
@@ -195,6 +249,7 @@ def delete_map():
             )
         else:
             try:
+                schedule_ftp_action(FTPAction.Delete, map)
                 map.delete()
                 flash('Deleted ' + map.name, 'success')
                 db.session.delete(map)
@@ -232,6 +287,7 @@ def upload():
             db.session.commit()
 
             schedule_compress(map)
+            schedule_ftp_action(FTPAction.Upload, map)
 
             if should_return_json:
                 return jsonify({

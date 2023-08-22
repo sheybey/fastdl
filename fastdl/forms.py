@@ -1,13 +1,14 @@
 from ipaddress import IPv4Address
 
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
+from flask_wtf.file import DataRequired, FileField, FileRequired
 from steam.enums.common import EType
 from steam.steamid import SteamID
 from werkzeug.utils import secure_filename
-from wtforms.validators import InputRequired, ValidationError
+from wtforms.validators import InputRequired, NumberRange, ValidationError
 from wtforms.fields import (
-    Field, BooleanField, HiddenField, IntegerField, StringField
+    Field, BooleanField, HiddenField, IntegerField, PasswordField,
+    SelectField, StringField
 )
 from wtforms.widgets import TextInput, HiddenInput
 
@@ -134,9 +135,12 @@ class NewUserForm(FlaskForm):
     admin = BooleanField('Admin')
 
 
+valid_port = NumberRange(min=1, max=65535, message='Invalid port')
+
+
 class NewServerForm(FlaskForm):
     ip = StringField('IP Address')
-    port = IntegerField('Port')
+    port = IntegerField('Port', validators=[valid_port], default=27015)
     description = StringField(
         'Description',
         validators=[InputRequired('Missing description')]
@@ -150,10 +154,6 @@ class NewServerForm(FlaskForm):
 
         if not field.data.is_global:
             raise ValidationError('Non-global IP address')
-
-    def validate_port(self, field):
-        if not field.data or field.data < 1:
-            raise ValidationError('Invalid port')
 
 
 class IDForm(FlaskForm):
@@ -177,3 +177,35 @@ class IDForm(FlaskForm):
             raise ValidationError('No such object.')
 
         self.instance = instance
+
+
+class RequiredIf:
+    def __init__(self, field_name: str):
+        self.field_name = field_name
+
+    def __call__(self, form: FlaskForm, field: Field):
+        prereq: Field = getattr(form, self.field_name)
+        if prereq.data and not field.data:
+            raise ValidationError('Missing ' + field.label.text)
+
+
+required_if_enabled = RequiredIf('ftp_enabled')
+
+
+class EditServerForm(NewServerForm):
+    ftp_enabled = BooleanField('Enable upload via FTP')
+    ftp_host = StringField('FTP Hostname', validators=[required_if_enabled])
+    ftp_port = IntegerField(
+        'FTP Port',
+        validators=[required_if_enabled, valid_port],
+        default=21
+    )
+    ftp_tls = BooleanField('Use TLS for FTP')
+    ftp_tls_verify = BooleanField('Verify FTP server TLS certificate')
+    ftp_user = StringField('FTP Username', validators=[required_if_enabled])
+    ftp_pass = PasswordField('FTP Password')
+    ftp_dir = StringField(
+        'FTP Maps Directory',
+        validators=[required_if_enabled],
+        default='/maps'
+    )
