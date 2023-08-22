@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
 
-  const proto = window.location.protocol === 'https' ? 'wss' : 'ws';
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
   const socket = new WebSocket(`${proto}://${window.location.host}/progress`);
 
   const formatPercent = (p) => `${Math.round(p * 1000) / 10}%`
