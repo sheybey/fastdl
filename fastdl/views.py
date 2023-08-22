@@ -10,6 +10,7 @@ from flask_login import current_user  # type: ignore
 from flask_login import login_required, login_user, logout_user
 
 from . import app, db, openid
+from .compress import schedule_compress
 from .forms import IDForm, NewServerForm, NewUserForm, UploadForm
 from .models import AnonymousUser, User, Server, Map, Access
 
@@ -133,7 +134,7 @@ def maps():
 
 @app.route('/maps/<name>')
 def download_map(name):
-    map = db.first_or_404(db.select(Map).where(Map.name == name))
+    map: Map = db.first_or_404(db.select(Map).where(Map.name == name))
     if not map.uploaded:
         abort(404)
 
@@ -166,11 +167,17 @@ def download_map(name):
         except (KeyError, ValueError):
             abort(404)
 
+    if map.compressed:
+        filename = map.filename_compressed
+        mimetype = 'application/x-bzip2'
+    else:
+        filename = map.filename
+        mimetype = 'application/octet-stream'
     return send_file(
-        map.filename,
-        mimetype='application/octet-stream',
+        filename,
+        mimetype=mimetype,
         as_attachment=True,
-        download_name=map.filename,
+        download_name=filename,
         conditional=True
     )
 
@@ -224,10 +231,13 @@ def upload():
             db.session.add(map)
             db.session.commit()
 
+            schedule_compress(map)
+
             if should_return_json:
                 return jsonify({
                     'success': True,
-                    'map_name': map.name
+                    'name': map.name,
+                    'id': map.id
                 })
             else:
                 flash('Uploaded ' + map.name, 'success')

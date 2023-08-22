@@ -4,6 +4,7 @@ from os import path
 from flask import Flask
 from flask_login import LoginManager
 from flask_openid import OpenID
+from flask_sock import Sock
 from flask_sqlalchemy import SQLAlchemy
 from steam.webapi import WebAPI
 
@@ -21,9 +22,11 @@ for key in ['SECRET_KEY', 'SQLALCHEMY_DATABASE_URI', 'STEAM_API_KEY']:
 login_manager = LoginManager(app)
 db = SQLAlchemy(app)
 openid = OpenID(app, store_factory=lambda: None)
+sock = Sock(app)
 steam_api = WebAPI(app.config['STEAM_API_KEY'])
 
 
 models = import_module('fastdl.models')
 views = import_module('fastdl.views')
 cli = import_module('fastdl.cli')
+background = import_module('fastdl.background')

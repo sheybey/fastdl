@@ -1,5 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
+
+  const proto = window.location.protocol === 'https' ? 'wss' : 'ws';
+  const socket = new WebSocket(`${proto}://${window.location.host}/progress`);
+
+  const formatPercent = (p) => `${Math.round(p * 1000) / 10}%`
+
   const container = document.querySelector('main');
   const input = document.querySelector('#map');
   const csrf = document.querySelector('#csrf_token');
@@ -45,6 +51,30 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelButton.innerText = 'Cancel';
     cardBody.appendChild(cancelButton);
 
+    const bars = new Map();
+    const backgroundProgressBar = (type, progress) => {
+      let bar = bars.get(type);
+      if (bar === undefined) {
+        bar = {
+          progress: document.createElement('progress'),
+          percent: document.createElement('small'),
+        }
+        bars.set(type, bar);
+
+        bar.progress.max = 1.0;
+        bar.progress.className = 'd-block w-100';
+
+        const p = document.createElement('p');
+        p.innerText = type + ' ';
+        p.appendChild(percent);
+
+        cardBody.insertBefore(p, cancelButton);
+        cardBody.insertBefore(bar.progress, cancelButton);
+      }
+      bar.progress.value = progress;
+      bar.percent.innerText = formatPercent(progress);
+    }
+
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       const magicNumber = "VBSP";
@@ -83,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
       xhr.setRequestHeader('Accept', 'application/json');
       xhr.addEventListener('load', function () {
         if (xhr.response.success) {
-          resolve(xhr.response.name);
+          resolve(xhr.response);
         } else {
           reject(xhr.response.error);
         }
@@ -93,15 +123,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.lengthComputable) {
           progressBar.max = e.total;
           progressBar.value = e.loaded;
-          percent.innerText = `${Math.round((e.loaded/e.total)*1000)/10}%`;
+          percent.innerText = formatPercent(e.loaded / e.total);
         } else {
           progressBar.removeAttribute('value');
         }
       });
       xhr.send(form_data);
-    })).then(() => {
+    })).then(({id}) => {
       status.innerText = 'Uploaded successfully';
       card.classList.add('bg-success');
+
+      const messageHandler = (msg) => {
+        try {
+          const {m, t, p} = JSON.parse(msg.data);
+          if (m === id) {
+            backgroundProgressBar(t, p);
+          }
+        } catch (e) {console.error('websocket message error', e);}
+      };
+      socket.addEventListener('message', messageHandler);
+      cancelButton.addEventListener('click', () => {
+        socket.removeEventListener('message', messageHandler);
+      });
+      socket.send(JSON.stringify({m: id}));
     }).catch((error) => {
       status.innerText = error;
       card.classList.add('bg-danger');
