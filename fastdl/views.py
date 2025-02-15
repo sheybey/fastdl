@@ -241,16 +241,18 @@ def download_map(name):
             abort(404)
 
     if map.compressed:
+        name = map.name + '.bz2'
         filename = map.filename_compressed
         mimetype = 'application/x-bzip2'
     else:
+        name = map.name
         filename = map.filename
         mimetype = 'application/octet-stream'
     return send_file(
         filename,
         mimetype=mimetype,
         as_attachment=True,
-        download_name=filename,
+        download_name=name,
         conditional=True
     )
 
