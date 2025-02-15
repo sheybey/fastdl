@@ -8,9 +8,10 @@ from flask import (
 )
 from flask_login import current_user  # type: ignore
 from flask_login import login_required, login_user, logout_user
+from steam_openid import SteamOpenID
 
 
-from . import app, db, openid
+from . import app, db
 from .compress import schedule_compress
 from .forms import (
     EditServerForm, IDForm, NewServerForm, NewUserForm, UploadForm
@@ -20,6 +21,13 @@ from .upload_ftp import FTPAction, schedule_ftp_action
 
 
 current_user: User | AnonymousUser
+
+
+def create_openid():
+    return SteamOpenID(
+        realm=url_for('login', _external=True),
+        return_to=url_for('login_callback', _external=True)
+    )
 
 
 def admin_required(view):
@@ -47,22 +55,33 @@ def index():
 
 
 @app.route('/login')
-@openid.loginhandler
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
 
-    error = openid.fetch_error()
-    if error:
-        flash(error, 'danger')
-
-    return openid.try_login('https://steamcommunity.com/openid')
+    return redirect(create_openid().get_redirect_url())
 
 
-@openid.after_login
-def after_login(response):
-    id = response.identity_url.split('/')[-1]
-    user = db.session.get(User, id)
+@app.route('/login/callback')
+def login_callback():
+    openid = create_openid()
+
+    steam_id = None
+    errors: list[str] = []
+    try:
+        steam_id = openid.validate_results(request.args)
+    except openid.SteamIDExtractionError:
+        errors.append('No user ID returned from Steam')
+
+    if steam_id is None:
+        if request.args.get('openid.mode') == 'error':
+            errors.extend(request.args.getlist('openid.error'))
+        if len(errors) == 0:
+            errors.append('Unknown error')
+
+        return render_template('login_failed.html', errors=errors)
+
+    user = db.session.get(User, steam_id)
     if user:
         login_user(user)
         return redirect(url_for('index'))
