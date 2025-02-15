@@ -415,6 +415,6 @@ def create_user():
                 flash('No such steam user.', 'danger')
 
     else:
-        flash(next(iter(form.errors['steamid64'])), 'danger')
+        flash(next(iter(form.errors['steamid'])), 'danger')
 
     return redirect(url_for('users'))

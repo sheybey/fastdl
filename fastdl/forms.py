@@ -1,14 +1,13 @@
 from ipaddress import IPv4Address
 
 from flask_wtf import FlaskForm
-from flask_wtf.file import DataRequired, FileField, FileRequired
+from flask_wtf.file import FileField, FileRequired
 from steam.enums.common import EType
 from steam.steamid import SteamID
 from werkzeug.utils import secure_filename
 from wtforms.validators import InputRequired, NumberRange, ValidationError
 from wtforms.fields import (
-    Field, BooleanField, HiddenField, IntegerField, PasswordField,
-    SelectField, StringField
+    Field, BooleanField, HiddenField, IntegerField, PasswordField, StringField
 )
 from wtforms.widgets import TextInput, HiddenInput
 
@@ -131,7 +130,10 @@ class UploadForm(FlaskForm):
 
 
 class NewUserForm(FlaskForm):
-    steamid = SteamIDField('Steam ID', validators=[valid_and_individual_id])
+    steamid = SteamIDField('Steam ID', validators=[
+        InputRequired('Missing Steam ID'),
+        valid_and_individual_id
+    ])
     admin = BooleanField('Admin')
 
 
